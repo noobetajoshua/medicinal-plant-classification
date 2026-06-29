@@ -12,21 +12,28 @@
       box-sizing: border-box;
     }
 
-    body {
-      min-height: 100vh;
-      font-family: "Segoe UI", Arial, sans-serif;
-      color: #143d2c;
-      background:
-        linear-gradient(rgba(244, 250, 241, 0.35), rgba(244, 250, 241, 0.35)),
-        url("{{ url_for('static', filename='assets/plant-bg.png') }}");
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 30px;
-    }
+  body {
+  min-height: 100vh;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: #143d2c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(rgba(244, 250, 241, 0.35), rgba(244, 250, 241, 0.35)),
+    url("{{ url_for('static', filename='assets/plant-bg.png') }}");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -1;
+}
 
     /* ── TOP NAV HEADER ── */
     .topbar {
@@ -157,6 +164,13 @@
       background: #f2faf4;
       transform: translateY(-2px);
       border-color: #247a49;
+    }
+
+    .upload-area.dragover {
+      background: #e6f5ec;
+      border-color: #1b5e35;
+      transform: translateY(-2px);
+      box-shadow: 0 0 0 4px rgba(45, 138, 85, 0.15);
     }
 
     .upload-area input {
@@ -398,7 +412,7 @@
             type="file"
             id="fileInput"
             name="file"
-            accept=".jpg,.jpeg"
+            accept=".jpg,.jpeg,.jfif,.png"
             onchange="previewImage(event)"
           />
 
@@ -408,7 +422,7 @@
               Drag & drop a leaf image here<br />
               or <span>click to browse</span>
             </div>
-            <div class="upload-subtitle">JPG / JPEG only • Max size 5MB</div>
+            <div class="upload-subtitle">JPG / JPEG / JFIF / PNG only • Max size 5MB</div>
           </div>
 
           <img id="preview" class="preview" src="" alt="Preview" />
@@ -462,32 +476,75 @@
   </main>
 
   <script>
+    const uploadArea = document.querySelector(".upload-area");
+    const fileInput  = document.getElementById("fileInput");
+    const preview    = document.getElementById("preview");
+    const uploadContent = document.getElementById("uploadContent");
+
+    // ── Click to browse (existing) ──
     function previewImage(event) {
       const file = event.target.files[0];
-      const preview = document.getElementById("preview");
-      const uploadContent = document.getElementById("uploadContent");
-
       if (!file) return;
+      loadPreview(file);
+    }
 
+    // ── Load preview from a File object ──
+    function loadPreview(file) {
+      if (!file.type.match(/image\/(jpeg|png)/)) {
+        showToast("⚠️ Only JPG, JPEG, JFIF, or PNG files are accepted.");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("⚠️ File exceeds 5MB limit.");
+        return;
+      }
       preview.src = URL.createObjectURL(file);
       preview.style.display = "block";
       uploadContent.style.display = "none";
     }
 
-    document.querySelector("form").addEventListener("submit", function (e) {
-      const fileInput = document.getElementById("fileInput");
+    // ── Drag events ──
+    uploadArea.addEventListener("dragover", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      uploadArea.classList.add("dragover");
+    });
 
+    uploadArea.addEventListener("dragleave", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      uploadArea.classList.remove("dragover");
+    });
+
+    uploadArea.addEventListener("drop", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      uploadArea.classList.remove("dragover");
+
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+
+      // Inject into the real file input so Flask receives it
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileInput.files = dt.files;
+
+      loadPreview(file);
+    });
+
+    // ── Form submit guard ──
+    document.querySelector("form").addEventListener("submit", function (e) {
       if (!fileInput.files || fileInput.files.length === 0) {
         e.preventDefault();
         showToast("⚠️ Please upload an image first.");
         return;
       }
-
       const button = document.getElementById("identifyBtn");
       button.innerHTML = "⏳ Analyzing...";
       button.disabled = true;
     });
 
+    // ── Toast ──
     function showToast(message) {
       const existing = document.getElementById("toast");
       if (existing) existing.remove();
