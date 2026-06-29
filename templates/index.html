@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medicinal Plant Recognition</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #143d2c;
+      background:
+        linear-gradient(rgba(244, 250, 241, 0.35), rgba(244, 250, 241, 0.35)),
+        url("{{ url_for('static', filename='assets/plant-bg.png') }}");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1050px;
+    }
+
+    .brand {
+      position: fixed;
+      top: 28px;
+      left: 36px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      box-shadow: 0 10px 25px rgba(31, 93, 67, 0.12);
+    }
+
+    .brand h2 {
+      font-size: 1.35rem;
+      color: #123d2b;
+      line-height: 1.1;
+    }
+
+    .brand p {
+      font-size: 0.9rem;
+      color: #4f6b5c;
+      margin-top: 4px;
+    }
+
+    .ai-badge {
+      position: fixed;
+      top: 32px;
+      right: 36px;
+      padding: 14px 22px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.75);
+      color: #2d6a4f;
+      font-weight: 600;
+      font-size: 0.95rem;
+      box-shadow: 0 10px 25px rgba(31, 93, 67, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 26px;
+    }
+
+    .hero-icon {
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      color: #123d2b;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+
+    .hero p {
+      color: #4f5f58;
+      font-size: 1.05rem;
+      margin-bottom: 14px;
+    }
+
+    .line {
+      width: 60px;
+      height: 4px;
+      background: #2d8a55;
+      border-radius: 20px;
+      margin: 0 auto;
+    }
+
+    .main-card {
+      background: rgba(255, 255, 255, 0.88);
+      border-radius: 26px;
+      padding: 36px;
+      box-shadow: 0 22px 55px rgba(36, 86, 58, 0.18);
+      display: grid;
+      grid-template-columns: 1.25fr 0.85fr;
+      gap: 34px;
+      backdrop-filter: blur(12px);
+    }
+
+    .upload-area {
+      border: 2px dashed #3d915f;
+      border-radius: 22px;
+      min-height: 245px;
+      padding: 34px;
+      cursor: pointer;
+      transition: 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.65);
+    }
+
+    .upload-area:hover {
+      background: #f2faf4;
+      transform: translateY(-2px);
+      border-color: #247a49;
+    }
+
+    .upload-area input {
+      display: none;
+    }
+
+    .upload-icon {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: #e7f4e7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+      font-size: 2.3rem;
+    }
+
+    .upload-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 6px;
+    }
+
+    .upload-title span {
+      color: #247a49;
+    }
+
+    .upload-subtitle {
+      color: #666;
+      font-size: 0.92rem;
+    }
+
+    .preview {
+      max-width: 100%;
+      max-height: 220px;
+      border-radius: 18px;
+      display: none;
+      object-fit: cover;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .security-note {
+      margin-top: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: #4f5f58;
+      font-size: 0.92rem;
+    }
+
+    .security-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #e7f4e7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #247a49;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .identify-btn {
+      margin-top: 28px;
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 17px 24px;
+      background: linear-gradient(135deg, #2d6a4f, #1f7a4c);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.25s ease;
+      box-shadow: 0 12px 25px rgba(45, 106, 79, 0.22);
+    }
+
+    .identify-btn:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #1b4332, #17683f);
+    }
+
+    .steps {
+      border-left: 1px solid #dce7df;
+      padding-left: 34px;
+    }
+
+    .steps-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #1f6b43;
+      font-size: 1.15rem;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid #e5eee8;
+    }
+
+    .step {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 28px;
+      align-items: flex-start;
+    }
+
+    .step-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: #e7f4e7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .step h3 {
+      font-size: 1.05rem;
+      color: #1f6b43;
+      margin-bottom: 5px;
+    }
+
+    .step p {
+      color: #5f6d66;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .tip {
+      margin: 24px auto 0;
+      max-width: 560px;
+      background: rgba(220, 239, 211, 0.85);
+      color: #2d6a4f;
+      padding: 14px 22px;
+      border-radius: 999px;
+      text-align: center;
+      font-size: 0.95rem;
+      box-shadow: 0 8px 22px rgba(45, 106, 79, 0.08);
+    }
+
+    @media (max-width: 850px) {
+      .brand,
+      .ai-badge {
+        position: static;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
+      .ai-badge {
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .main-card {
+        grid-template-columns: 1fr;
+      }
+
+      .steps {
+        border-left: none;
+        border-top: 1px solid #dce7df;
+        padding-left: 0;
+        padding-top: 28px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 18px;
+      }
+
+      .main-card {
+        padding: 22px;
+        border-radius: 22px;
+      }
+
+      .upload-area {
+        padding: 22px;
+        min-height: 220px;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .tip {
+        border-radius: 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="brand">
+    <div class="brand-icon">🌿</div>
+    <div>
+      <h2>MedPlant AI</h2>
+      <p>Discover. Learn. Heal.</p>
+    </div>
+  </div>
+
+  <div class="ai-badge">ⓘ AI-Powered Plant Recognition</div>
+
+  <main class="page">
+    <section class="hero">
+      <div class="hero-icon">🌱</div>
+      <h1>Medicinal Plant Recognition</h1>
+      <p>Identify medicinal plants using AI technology</p>
+      <div class="line"></div>
+    </section>
+
+    <section class="main-card">
+      <form action="/predict" method="POST" enctype="multipart/form-data">
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+          <input
+            type="file"
+            id="fileInput"
+            name="file"
+            accept=".jpg,.jpeg"
+            onchange="previewImage(event)"
+          />
+
+          <div id="uploadContent">
+            <div class="upload-icon">☁️</div>
+            <div class="upload-title">
+              Drag & drop a leaf image here<br />
+              or <span>click to browse</span>
+            </div>
+            <div class="upload-subtitle">JPG / JPEG only • Max size 5MB</div>
+          </div>
+
+          <img id="preview" class="preview" src="" alt="Preview" />
+        </div>
+
+        <div class="security-note">
+          <div class="security-icon">🛡️</div>
+          <div>
+            <strong>Your image is safe and secure.</strong><br />
+            Your upload is only used for plant identification.
+          </div>
+        </div>
+
+        <button type="submit" class="identify-btn" id="identifyBtn">
+          🔍 Identify Plant
+        </button>
+      </form>
+
+      <aside class="steps">
+        <h2 class="steps-title">🌿 How it works</h2>
+
+        <div class="step">
+          <div class="step-icon">🍃</div>
+          <div>
+            <h3>1. Upload</h3>
+            <p>Upload a clear image of a medicinal plant leaf.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-icon">🧠</div>
+          <div>
+            <h3>2. Analyze</h3>
+            <p>Our AI model checks the image and compares plant patterns.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-icon">📖</div>
+          <div>
+            <h3>3. Identify</h3>
+            <p>Get the predicted plant name and recognition result.</p>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <div class="tip">
+      💡 Tip: For best results, use a clear photo of a healthy leaf under good lighting.
+    </div>
+  </main>
+
+  <script>
+    function previewImage(event) {
+      const file = event.target.files[0];
+      const preview = document.getElementById("preview");
+      const uploadContent = document.getElementById("uploadContent");
+
+      if (!file) return;
+
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+      uploadContent.style.display = "none";
+    }
+
+    document.querySelector("form").addEventListener("submit", function () {
+      const button = document.getElementById("identifyBtn");
+      button.innerHTML = "⏳ Analyzing...";
+      button.disabled = true;
+    });
+  </script>
+</body>
+</html>

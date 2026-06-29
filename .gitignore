@@ -1,0 +1,58 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Environment variables / secrets
+.env
+.env.local
+*.env
+
+# Flask temporary files
+instance/
+.webassets-cache
+
+# Uploaded user images
+uploads/*
+!uploads/.gitkeep
+
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Dataset folders
+dataset/
+datasets/
+data/
+train/
+test/
+valid/
+validation/
+
+# Jupyter / Colab files
+.ipynb_checkpoints/
+*.ipynb
+
+# ML training output / logs
+logs/
+runs/
+checkpoints/
+*.ckpt
+*.checkpoint
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code personal settings
+.vscode/
+
+# Optional: ignore very large trained models
+# Uncomment these if your model files are too large for GitHub
+# *.keras
+# *.h5
+# *.weights.h5

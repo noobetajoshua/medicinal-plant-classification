@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prediction Result</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #143d2c;
+      background:
+        linear-gradient(rgba(244, 250, 241, 0.35), rgba(244, 250, 241, 0.35)),
+        url("{{ url_for('static', filename='assets/plant-bg.png') }}");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 32px;
+    }
+
+    .brand {
+      position: fixed;
+      top: 18px;
+      left: 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .brand-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.78);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.45rem;
+      box-shadow: 0 10px 25px rgba(31, 93, 67, 0.12);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand h2 {
+      font-size: 1.1rem;
+      color: #123d2b;
+      line-height: 1.1;
+    }
+
+    .brand p {
+      font-size: 0.78rem;
+      color: #4f6b5c;
+      margin-top: 3px;
+    }
+
+    .ai-badge {
+      position: fixed;
+      top: 22px;
+      right: 28px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(45, 106, 79, 0.16);
+      color: #2d6a4f;
+      font-weight: 700;
+      font-size: 0.82rem;
+      box-shadow: 0 10px 25px rgba(31, 93, 67, 0.1);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+
+    .result-card {
+      width: 100%;
+      max-width: 1180px;
+      max-height: calc(100vh - 40px);
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 24px;
+      padding: 26px 34px;
+      box-shadow: 0 24px 60px rgba(36, 86, 58, 0.18);
+      backdrop-filter: blur(14px);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #e8f5e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      margin: 0 auto 8px;
+      box-shadow: 0 8px 20px rgba(45, 106, 79, 0.08);
+    }
+
+    .header h1 {
+      font-size: 2.1rem;
+      color: #123d2b;
+      letter-spacing: -0.6px;
+      margin-bottom: 4px;
+    }
+
+    .header p {
+      color: #5f6d66;
+      font-size: 0.92rem;
+      margin-bottom: 8px;
+    }
+
+    .line {
+      width: 58px;
+      height: 3px;
+      background: #2d8a55;
+      border-radius: 999px;
+      margin: 0 auto;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 0.95fr 1.25fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .image-panel {
+      position: relative;
+      border-radius: 22px;
+      overflow: hidden;
+      height: 430px;
+      background: #eef7ef;
+      box-shadow: inset 0 0 0 1px rgba(45, 106, 79, 0.08);
+    }
+
+    .uploaded-img {
+      width: 100%;
+      height: 430px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .status-pill {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #2d6a4f;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+      backdrop-filter: blur(10px);
+    }
+
+    .details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .info-box {
+      background: rgba(248, 253, 249, 0.92);
+      border: 1px solid rgba(45, 106, 79, 0.12);
+      border-left: 4px solid #2d8a55;
+      border-radius: 14px;
+      padding: 16px 18px;
+      box-shadow: 0 8px 20px rgba(36, 86, 58, 0.06);
+    }
+
+    .box-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .box-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #5f6d66;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .box-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #e8f5e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #2d6a4f;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .result-value {
+      color: #123d2b;
+      font-size: 1.28rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .scientific {
+      font-style: italic;
+      font-weight: 700;
+      color: #1f6b43;
+    }
+
+    .match-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #e2f3df;
+      color: #2d6a4f;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    .confidence-bar {
+      width: 100%;
+      height: 9px;
+      background: #dfece3;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #52b788, #2d8a55);
+      border-radius: 999px;
+    }
+
+    .confidence-scale {
+      display: flex;
+      justify-content: space-between;
+      color: #6f7a74;
+      font-size: 0.75rem;
+      margin-top: 7px;
+    }
+
+    .uses-list {
+      list-style: none;
+      display: grid;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .uses-list li {
+      color: #2d6a4f;
+      font-size: 0.9rem;
+      line-height: 1.35;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .uses-list li::before {
+      content: "✓";
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      border-radius: 50%;
+      background: #52b788;
+      color: white;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+
+    .tip-box {
+      grid-column: span 2;
+      background: linear-gradient(135deg, #eaf6e6, #f7fcf6);
+      border: 1px solid rgba(45, 106, 79, 0.1);
+      border-radius: 14px;
+      padding: 13px 18px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      color: #27563f;
+      font-size: 0.9rem;
+    }
+
+    .tip-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #ddefd8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+
+    .actions {
+      grid-column: span 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 2px;
+    }
+
+    .actions form {
+      width: 100%;
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 13px 18px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.25s ease;
+      text-decoration: none;
+      text-align: center;
+      display: block;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2d6a4f, #1f7a4c);
+      color: white;
+      box-shadow: 0 12px 24px rgba(45, 106, 79, 0.2);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #1b4332, #17683f);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.75);
+      color: #2d6a4f;
+      border: 1px solid rgba(45, 106, 79, 0.35);
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      background: #f2faf4;
+    }
+
+    @media (min-width: 1001px) {
+      body {
+        overflow: hidden;
+      }
+    }
+
+    @media (max-width: 1000px) {
+      body {
+        padding: 24px;
+      }
+
+      .brand,
+      .ai-badge {
+        position: static;
+        justify-content: center;
+        margin-bottom: 18px;
+      }
+
+      .ai-badge {
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .result-card {
+        max-height: none;
+        padding: 30px;
+      }
+
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      .image-panel,
+      .uploaded-img {
+        height: 330px;
+      }
+    }
+
+    @media (max-width: 650px) {
+      body {
+        padding: 18px;
+      }
+
+      .result-card {
+        padding: 22px;
+        border-radius: 22px;
+      }
+
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .details {
+        grid-template-columns: 1fr;
+      }
+
+      .tip-box,
+      .actions {
+        grid-column: span 1;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .image-panel,
+      .uploaded-img {
+        height: 250px;
+      }
+
+      .header-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 1.7rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  {% set plant_key = plant_name|lower|replace('_', ' ') %}
+  {% set plant_display = plant_name|replace('_', ' ')|title %}
+
+  <div class="brand">
+    <div class="brand-icon">🌿</div>
+    <div>
+      <h2>MedPlant AI</h2>
+      <p>Discover. Learn. Heal.</p>
+    </div>
+  </div>
+
+  <div class="ai-badge">✦ AI-Powered Recognition</div>
+
+  <main class="result-card">
+    <section class="header">
+      <div class="header-icon">🌱</div>
+      <h1>Prediction Result</h1>
+      <p>Here is the plant our AI identified for you.</p>
+      <div class="line"></div>
+    </section>
+
+    <section class="content">
+      <div class="image-panel">
+        <img src="{{ image_path }}" alt="Uploaded Image" class="uploaded-img" />
+        <div class="status-pill">✅ Analysis Complete</div>
+      </div>
+
+      <div class="details">
+        <div class="info-box">
+          <div class="box-top">
+            <div class="box-title">
+              <span class="box-icon">🍃</span>
+              Prediction
+            </div>
+          </div>
+
+          <div class="result-value">{{ plant_display }}</div>
+          <div class="match-badge">✅ Correct Match</div>
+        </div>
+
+        <div class="info-box">
+          <div class="box-top">
+            <div class="box-title">
+              <span class="box-icon">📈</span>
+              Confidence Score
+            </div>
+          </div>
+
+          <div class="result-value">{{ confidence }}%</div>
+
+          <div class="confidence-bar">
+            <div class="confidence-fill" style="width: {{ confidence }}%;"></div>
+          </div>
+
+          <div class="confidence-scale">
+            <span>0%</span>
+            <span>50%</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="box-top">
+            <div class="box-title">
+              <span class="box-icon">🧪</span>
+              Scientific Name
+            </div>
+          </div>
+
+          <div class="result-value scientific">
+            {% if plant_key == 'aloe vera' %}Aloe vera
+            {% elif plant_key == 'lagundi' %}Vitex negundo
+            {% elif plant_key == 'oregano' %}Plectranthus amboinicus
+            {% elif plant_key == 'sambong' %}Blumea balsamifera
+            {% elif plant_key == 'guava' %}Psidium guajava
+            {% elif plant_key == 'malunggay' %}Moringa oleifera
+            {% elif plant_key == 'tsaang gubat' %}Carmona retusa
+            {% elif plant_key == 'yerba buena' %}Mentha cordifolia
+            {% else %}Unknown
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="box-top">
+            <div class="box-title">
+              <span class="box-icon">🌿</span>
+              Medicinal Uses
+            </div>
+          </div>
+
+          <ul class="uses-list">
+            {% if plant_key == 'aloe vera' %}
+              <li>Soothes skin burns and wounds</li>
+              <li>Moisturizes and heals skin</li>
+              <li>Aids digestion</li>
+            {% elif plant_key == 'lagundi' %}
+              <li>Relieves cough and asthma</li>
+              <li>Reduces fever</li>
+              <li>Anti-inflammatory properties</li>
+            {% elif plant_key == 'oregano' %}
+              <li>Relieves cough and colds</li>
+              <li>Antibacterial properties</li>
+              <li>Aids digestion</li>
+            {% elif plant_key == 'sambong' %}
+              <li>Helps dissolve kidney stones</li>
+              <li>Diuretic properties</li>
+              <li>Reduces high blood pressure</li>
+            {% elif plant_key == 'guava' %}
+              <li>Treats diarrhea and dysentery</li>
+              <li>Rich in Vitamin C</li>
+              <li>Lowers blood sugar levels</li>
+            {% elif plant_key == 'malunggay' %}
+              <li>Rich in vitamins and minerals</li>
+              <li>Anti-inflammatory properties</li>
+              <li>Boosts immune system</li>
+            {% elif plant_key == 'tsaang gubat' %}
+              <li>Relieves stomachache</li>
+              <li>Used as mouthwash</li>
+              <li>Antidiarrheal properties</li>
+            {% elif plant_key == 'yerba buena' %}
+              <li>Relieves headache and body pain</li>
+              <li>Reduces fever</li>
+              <li>Aids digestion</li>
+            {% else %}
+              <li>No medicinal information available.</li>
+            {% endif %}
+          </ul>
+        </div>
+
+        <div class="tip-box">
+          <div class="tip-icon">💡</div>
+          <div>
+            <strong>Tip</strong><br />
+            For best results, upload a clear image of a healthy leaf under good lighting.
+          </div>
+        </div>
+
+        <div class="actions">
+          <form action="/" method="GET">
+            <button type="submit" class="btn btn-primary">📷 Try Another Image</button>
+          </form>
+
+          <a href="/" class="btn btn-secondary">← Back to Home</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
