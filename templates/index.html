@@ -23,61 +23,78 @@
       background-position: center;
       background-repeat: no-repeat;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
       padding: 30px;
     }
 
-    .page {
+    /* ── TOP NAV HEADER ── */
+    .topbar {
       width: 100%;
       max-width: 1050px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 36px;
     }
 
     .brand {
-      position: fixed;
-      top: 28px;
-      left: 36px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
     .brand-icon {
-      width: 52px;
-      height: 52px;
+      width: 54px;
+      height: 54px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.75);
+      background: rgba(255, 255, 255, 0.82);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.8rem;
-      box-shadow: 0 10px 25px rgba(31, 93, 67, 0.12);
+      font-size: 1.85rem;
+      box-shadow: 0 10px 25px rgba(31, 93, 67, 0.14);
+      overflow: hidden;
+      flex-shrink: 0;
     }
 
-    .brand h2 {
+    .brand-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .brand-text h2 {
       font-size: 1.35rem;
+      font-weight: 800;
       color: #123d2b;
-      line-height: 1.1;
+      line-height: 1.15;
+      letter-spacing: -0.3px;
     }
 
-    .brand p {
-      font-size: 0.9rem;
-      color: #4f6b5c;
-      margin-top: 4px;
+    .brand-text p {
+      font-size: 0.85rem;
+      color: #4f7a62;
+      margin-top: 2px;
+      font-style: italic;
     }
 
     .ai-badge {
-      position: fixed;
-      top: 32px;
-      right: 36px;
-      padding: 14px 22px;
+      padding: 12px 20px;
       border-radius: 14px;
-      background: rgba(255, 255, 255, 0.75);
+      background: rgba(255, 255, 255, 0.78);
       color: #2d6a4f;
       font-weight: 600;
-      font-size: 0.95rem;
-      box-shadow: 0 10px 25px rgba(31, 93, 67, 0.1);
+      font-size: 0.92rem;
+      box-shadow: 0 8px 22px rgba(31, 93, 67, 0.1);
       backdrop-filter: blur(10px);
+    }
+
+    /* ── PAGE ── */
+    .page {
+      width: 100%;
+      max-width: 1050px;
     }
 
     .hero {
@@ -225,6 +242,12 @@
       background: linear-gradient(135deg, #1b4332, #17683f);
     }
 
+    .identify-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .steps {
       border-left: 1px solid #dce7df;
       padding-left: 34px;
@@ -284,18 +307,24 @@
       box-shadow: 0 8px 22px rgba(45, 106, 79, 0.08);
     }
 
-    @media (max-width: 850px) {
-      .brand,
-      .ai-badge {
-        position: static;
-        justify-content: center;
-        margin-bottom: 20px;
-      }
+    /* ── TOAST ── */
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
 
-      .ai-badge {
-        width: fit-content;
-        margin-left: auto;
-        margin-right: auto;
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateX(-50%) translateY(0); }
+      to   { opacity: 0; transform: translateX(-50%) translateY(12px); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 850px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 24px;
       }
 
       .main-card {
@@ -337,15 +366,22 @@
 </head>
 
 <body>
-  <div class="brand">
-    <div class="brand-icon">🌿</div>
-    <div>
-      <h2>MedPlant AI</h2>
-      <p>Discover. Learn. Heal.</p>
-    </div>
-  </div>
 
-  <div class="ai-badge">ⓘ AI-Powered Plant Recognition</div>
+  <!-- ── TOPBAR (inline, not fixed) ── -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <!-- If you have a logo image: -->
+        <!-- <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="MedPlant AI Logo" /> -->
+        🌿
+      </div>
+      <div class="brand-text">
+        <h2>MedPlant AI</h2>
+        <p>Discover. Learn. Heal.</p>
+      </div>
+    </div>
+    <div class="ai-badge">ⓘ AI-Powered Plant Recognition</div>
+  </header>
 
   <main class="page">
     <section class="hero">
@@ -438,11 +474,50 @@
       uploadContent.style.display = "none";
     }
 
-    document.querySelector("form").addEventListener("submit", function () {
+    document.querySelector("form").addEventListener("submit", function (e) {
+      const fileInput = document.getElementById("fileInput");
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        e.preventDefault();
+        showToast("⚠️ Please upload an image first.");
+        return;
+      }
+
       const button = document.getElementById("identifyBtn");
       button.innerHTML = "⏳ Analyzing...";
       button.disabled = true;
     });
+
+    function showToast(message) {
+      const existing = document.getElementById("toast");
+      if (existing) existing.remove();
+
+      const toast = document.createElement("div");
+      toast.id = "toast";
+      toast.textContent = message;
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1f6b43;
+        color: white;
+        padding: 14px 28px;
+        border-radius: 999px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+        z-index: 9999;
+        white-space: nowrap;
+        animation: toastIn 0.22s ease forwards;
+      `;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = "toastOut 0.22s ease forwards";
+        setTimeout(() => toast.remove(), 220);
+      }, 2500);
+    }
   </script>
 </body>
 </html>
